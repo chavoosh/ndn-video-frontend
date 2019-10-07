@@ -12,3 +12,13 @@ they can be safely used to develop your own html webpages.
 The following JavaScript libraries are used in this project:
 - [Shaka Player](https://github.com/google/shaka-player)
 - [ndn-js](https://github.com/named-data/ndn-js)
+
+# Backend
+To run an NDN video fileserver visit [ndn-mongo-fileserver](https://github.com/chavoosh/ndn-mongo-fileserver).
+
+# Reporting Bugs
+To report any bugs or features use the project's [issue tracker](https://github.com/chavoosh/ndn-video-frontend/issues).
+
+# License
+ndn-mongo-fileserver is an open source project licensed under the GPL version 3. See [COPYING.md](COPYING.md)
+for more information.
