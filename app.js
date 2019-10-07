@@ -1,18 +1,15 @@
 /**
  * @summary We make an assumption that the very first request is for
  *          manifest file of the video.
- *
- * @note leave BASEPREFIX null, if you want it to be determined automatically.
  */
 
+// This should match the prefix of all files
 var BASEPREFIX = "/ndn/web";
 
 var MANIFEST_RESOURCE = null;  // resouce part in manifest uri
 var HUB = "hobo.cs.arizona.edu"; // default hub
 
 var PUBLIC_IP_ADDRESS = null; // public ip address of client
-var N_ATTEMPTS = 4;
-var hubIsChosen = 0;
 
 /**
  * @summary The available ports are 443 and 9696.
@@ -25,13 +22,13 @@ function resolveHubs () {
   MANIFEST_RESOURCE = document.getElementById("manifestUri").textContent;
 
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', "https://ndn-fch.named-data.net/?cap=wss&k=3", false); // get 3 hubs
+  xhr.open('GET', "https://ndn-fch.named-data.net/?cap=wss&k=1", false); // get 3 hubs
   xhr.send();
 
   // save hubs into a list
-  HUB = xhr.responseText.split(",");
+  HUB = xhr.responseText;
 
-  console.log("Resolved Closest Hubs: ", HUB);
+  console.log("Resolved Closest Hub: ", HUB);
 }
 
 function resolvePublicIp () {
@@ -58,42 +55,6 @@ function resolvePort () {
   }
 }
 
-/**
- * @summary fetch manifest file from each each resolved hub,
-            in parallel and call the player for the hub who delivered the file, first
- *
- * @param callback A callback function
- * @param retiresOnNoConnection The number of times to test content retrieval from resolved hubs before giving up
- */
-function hubTester(callback, retiresOnNoConnection) {
-  // create an interest for manifest file
-  var interest = new Interest(new Name(MANIFEST_RESOURCE));
-  interest.setInterestLifetimeMilliseconds(1000);
-
-  for (i = 0; i < HUB.length; i++) {
-    var face = new Face({host: "wss://" + HUB[i] + "/ws/", port: PORT});
-
-    SegmentFetcher.fetch(face, interest, null,
-      function(content) { // onComplete
-          callback('https://' +
-                   this.face.connectionInfo.host.split("/")[2].split(":")[0] +
-                   MANIFEST_RESOURCE); // callback the player
-      },
-      function(errorCode, message) { // onError
-        shaka.log.debug('Error ' + errorCode + ': ' + message);
-      },
-      {pipeline: "cubic"}
-    );
-  }
-  // check if a hub is chosen after 1 sec, if there's no chosen hub, retry.
-  setTimeout(function() {
-    if(hubIsChosen == 0 && retiresOnNoConnection > 0) {
-      console.log("No hub is responding, retry...");
-      hubTester(callback, retiresOnNoConnection - 1);
-    }
-  }, 2000)
-}
-
 function initApp() {
   // Install built-in polyfills to patch browser incompatibilities.
   shaka.polyfill.installAll();
@@ -114,42 +75,35 @@ function initPlayer() {
   resolvePublicIp();
   resolvePort();
 
-  hubTester(function(uri) {
-    if (hubIsChosen == 1)
-      return; // another hub is already chosen
+  // Create a Player instance.
+  var video = document.getElementById('video');
+  var player = new shaka.Player(video);
 
-    console.log("Chosen hub: " + uri);
-    hubIsChosen = 1; // update the flag
+  // Attach player to the window to make it easy to access in the JS console.
+  window.player = player;
 
-    // Create a Player instance.
-    var video = document.getElementById('video');
-    var player = new shaka.Player(video);
+  // Listen for error events.
+  player.addEventListener('error', onErrorEvent);
 
-    // Attach player to the window to make it easy to access in the JS console.
-    window.player = player;
+  // configure player
+  player.configure({
+    streaming: {
+      bufferingGoal: 20,
+      bufferBehind: 20,
+      retryParameters: {
+        maxAttempts: 1,
+        timeout: 0
+      }
+    },
+  });
 
-    // Listen for error events.
-    player.addEventListener('error', onErrorEvent);
-
-    // configure player
-    player.configure({
-      streaming: {
-        bufferingGoal: 20,
-        bufferBehind: 20,
-        retryParameters: {
-          maxAttempts: 1,
-          timeout: 0
-        }
-      },
-    });
-
-    // Try to load a manifest (this is an asynchronous process)
-    player.load(uri).then(function() {
-      // This runs if the asynchronous load is successful.
-      console.log('The video has now been loaded!');
-    }).catch(onError);  // onError is executed if the asynchronous load fails.
-  }, N_ATTEMPTS);
+  // Try to load a manifest (this is an asynchronous process)
+  player.load('https://' + HUB + MANIFEST_RESOURCE).then(function() {
+    // This runs if the asynchronous load is successful.
+    console.log('The video has now been loaded!');
+  }).catch(onError);  // onError is executed if the asynchronous load fails.
 }
+
 
 function onErrorEvent(event) {
   // Extract the shaka.util.Error object from the event.
@@ -161,12 +115,5 @@ function onError(error) {
   console.error('Error code', error.code, 'object', error);
 }
 
-function nativeHls() {
-  var url = document.getElementById("videoUrl").textContent;
-  var video = document.getElementById('video');
-
-  video.src = url;
-  video.load();
-}
 
 document.addEventListener('DOMContentLoaded', initApp);
