@@ -7,7 +7,7 @@
 var BASEPREFIX = "/ndn/web";
 
 var MANIFEST_RESOURCE = null;  // resouce part in manifest uri
-var HUB = "hobo.cs.arizona.edu"; // default hub
+var HUB = "localhost"; // default hub
 
 var PUBLIC_IP_ADDRESS = null; // public ip address of client
 
@@ -71,9 +71,13 @@ function initApp() {
 }
 
 function initPlayer() {
+  //===================================================//
+  // For LOCAL test, COMMENT the following three lines //
+  //===================================================//
   resolveHubs();
   resolvePublicIp();
   resolvePort();
+
 
   // Create a Player instance.
   var video = document.getElementById('video');
