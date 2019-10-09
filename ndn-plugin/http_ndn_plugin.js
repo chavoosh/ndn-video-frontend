@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019, Regents of the University of Arizona.
+ * Copyright (c) 2019, Regents of the University of Arizona.
  * Author: Chavoosh Ghasemi <chghasemi@cs.arizona.edu>
  *         Shaka Player project <https://github.com/google/shaka-player>
  *
@@ -14,6 +14,7 @@ goog.require('shaka.util.Error');
 
 var face = null;
 var host = null;
+var PLAYER;
 Log.LOG = 3; // log level for ndn-js
 
 var sessionNo = Math.floor(Math.random() * Math.pow(10, 12));
@@ -37,9 +38,11 @@ statsCode = {
  * @export
  */
 shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
+  PLAYER = this.player;
+
   // Last time stamp when we got a progress event.
   var startTime = Date.now();
-  //console.log(uri);
+  
   // Last number of bytes loaded, from progress event.
   var lastLoaded = 0;
   var promise = new Promise(function(resolve, reject) {
@@ -62,7 +65,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
     }
 
     // get BW Estimation for collecting stats
-    var bandwidthEst = Math.round(this.player.abrManager_.bandwidthEstimator_.getBandwidthEstimate());
+    var bandwidthEst = Math.round(PLAYER.abrManager_.bandwidthEstimator_.getBandwidthEstimate());
 
     var interest = new Interest(new Name(name));
     interest.setInterestLifetimeMilliseconds(1000);
@@ -132,14 +135,14 @@ function createStatsName(statCode, name, startTime, host, bandwidthEst, stats) {
   }
 
 
-  if (startupDelay === 0 && !isNaN(this.player.stats_.loadLatency)) {
-    startupDelay = this.player.stats_.loadLatency;
+  if (startupDelay === 0 && !isNaN(PLAYER.stats_.loadLatency)) {
+    startupDelay = PLAYER.stats_.loadLatency;
   }
 
-  if (this.player.stats_.stateHistory.length > 0) {
+  if (PLAYER.stats_.stateHistory.length > 0) {
     var i = rebufferingArray.length > 0 ? rebufferingArray[rebufferingArray.length - 1] + 1 : 1;
-    for ( ; i < this.player.stats_.stateHistory.length; ++i) {
-      if (this.player.stats_.stateHistory[i].state === "buffering") {
+    for ( ; i < PLAYER.stats_.stateHistory.length; ++i) {
+      if (PLAYER.stats_.stateHistory[i].state === "buffering") {
         rebufferingArray.push(i);
       }
     }
@@ -164,7 +167,7 @@ function createStatsName(statCode, name, startTime, host, bandwidthEst, stats) {
 
   // append duration of bufferings
   for (i = 0; i < rebufferingArray.length; ++i) {
-    statsName.append('bufferingDuration=' + this.player.stats_.stateHistory[rebufferingArray[i]].duration);
+    statsName.append('bufferingDuration=' + PLAYER.stats_.stateHistory[rebufferingArray[i]].duration);
   }
 
   return statsName;
