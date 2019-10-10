@@ -42,7 +42,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
 
   // Last time stamp when we got a progress event.
   var startTime = Date.now();
-  
+
   // Last number of bytes loaded, from progress event.
   var lastLoaded = 0;
   var promise = new Promise(function(resolve, reject) {

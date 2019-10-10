@@ -1,6 +1,13 @@
 /**
- * @summary We make an assumption that the very first request is for
- *          manifest file of the video.
+ * Copyright (c) 2019, Regents of the University of Arizona.
+ * Author: Chavoosh Ghasemi <chghasemi@cs.arizona.edu>
+ *         Shaka Player project <https://github.com/google/shaka-player>
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this script e.g., in COPYING.md file. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * NOTE: We make an assumption that the very first request is for
+ *       manifest file of the video.
  */
 
 // This should match the prefix of all files
