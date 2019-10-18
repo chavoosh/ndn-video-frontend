@@ -14,12 +14,9 @@ goog.require('shaka.util.Error');
 
 var face = null;
 var host = null;
-var PLAYER;
-Log.LOG = 3; // log level for ndn-js
 
 var sessionNo = Math.floor(Math.random() * Math.pow(10, 12));
 var startupDelay = 0; // startup delay of the video
-var rebufferingArray = []; // keep the index of buffering events in `stateHistory` (exclude startup)
 
 statsCode = {
   DONE: 1,
@@ -38,34 +35,25 @@ statsCode = {
  * @export
  */
 shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
-  PLAYER = this.player;
-
   // Last time stamp when we got a progress event.
   var startTime = Date.now();
-
-  // Last number of bytes loaded, from progress event.
-  var lastLoaded = 0;
   var promise = new Promise(function(resolve, reject) {
     var parser = document.createElement('a');
     parser.href = uri;
     var name = parser.pathname;
 
-    if (BASEPREFIX == null) {
-      BASEPREFIX = name.split('/').slice(0, -1).join('/');
+    if (typeof BASEPREFIX !== 'string' || BASEPREFIX.length == 0) {
+      shaka.log.error('BASEPREFIX is not valid');
+      return;
     }
 
-    if (PORT == 443)
+    if (PORT === 443)
       host = 'wss://' + parser.host + '/ws/';
     else
       host = parser.host;
 
-    if (face == null) {
-      // Connect to the forwarder with a WebSocket.
+    if (face === null)
       face = new Face({host: host, port: PORT});
-    }
-
-    // get BW Estimation for collecting stats
-    var bandwidthEst = Math.round(PLAYER.abrManager_.bandwidthEstimator_.getBandwidthEstimate());
 
     var interest = new Interest(new Name(name));
     interest.setInterestLifetimeMilliseconds(1000);
@@ -84,12 +72,13 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
           shaka.log.debug('Uknown request type ' + requestType);
         };
         // send an Interest back for collecting stats
-        var statsName = createStatsName(statsCode.DONE, name, startTime, host, bandwidthEst, statsObj);
-
-        // create stats Interest
-        var statsInterest = new Interest(statsName);
-        statsInterest.setMustBeFresh(true);
-        face.expressInterest(statsInterest, null, null, null, null, null);
+        var statsName = createStatsName(statsCode.DONE, name, startTime, host, statsObj);
+        if (statsName !== "") {
+          // create stats Interest
+          var statsInterest = new Interest(statsName);
+          statsInterest.setMustBeFresh(true);
+          face.expressInterest(statsInterest, null, null, null, null, null);
+        }
 
         resolve(response);
       },
@@ -97,14 +86,15 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
         shaka.log.debug('Error ' + errorCode + ': ' + message);
 
         // send an Interest back for collecting stats
-        var statsName = createStatsName(statsCode.ERROR, name, startTime, host, bandwidthEst, statsObj);
-
-        // create stats Interest
-        var statsInterest = new Interest(statsName);
-        statsInterest.setMustBeFresh(true);
-        face.expressInterest(statsInterest, null, null, null, null, null);
+        var statsName = createStatsName(statsCode.ERROR, name, startTime, host, statsObj);
+        if (statsName !== "") {
+          // create stats Interest
+          var statsInterest = new Interest(statsName);
+          statsInterest.setMustBeFresh(true);
+          face.expressInterest(statsInterest, null, null, null, null, null);
+        }
       },
-      {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 1000},
+      {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 50},
       statsObj);
   });
 
@@ -123,30 +113,27 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
  * @param name The file name
  * @param startTime The starting time of file downloading
  * @param host The URL of NFD instance we are connecting to
- * @param bandwidthEst An estimation of current BW
  */
-function createStatsName(statCode, name, startTime, host, bandwidthEst, stats) {
+function createStatsName(statCode, name, startTime, host, stats) {
   var stat = 'DONE'; /* every code except 2 means success */
   if (statCode === 2) {
     stat = 'ERROR';
   }
   else if (statCode !== 1) {
-    shaka.log.debug('WARNING: Unrecognized statCode', statCode);
+    shaka.log.warning('WARNING: Unrecognized statCode', statCode);
   }
 
+  var stats_ = window.player.getStats();
+  if (isNaN(stats_.loadLatency))
+    return ""; // samples are not ready yet
 
-  if (startupDelay === 0 && !isNaN(PLAYER.stats_.loadLatency)) {
-    startupDelay = PLAYER.stats_.loadLatency;
-  }
+  var bandwidthEst = Math.round(stats_.estimatedBandwidth);
+  var startupDelay =stats_.loadLatency;
 
-  if (PLAYER.stats_.stateHistory.length > 0) {
-    var i = rebufferingArray.length > 0 ? rebufferingArray[rebufferingArray.length - 1] + 1 : 1;
-    for ( ; i < PLAYER.stats_.stateHistory.length; ++i) {
-      if (PLAYER.stats_.stateHistory[i].state === "buffering") {
-        rebufferingArray.push(i);
-      }
-    }
-  }
+  var rebufferingArray = [];
+  for (var i = 1 /*exclude startup buffering*/; i < stats_.stateHistory.length; ++i)
+    if (stats_.stateHistory[i].state === "buffering")
+      rebufferingArray.push(i);
 
   var statsName = new Name(name.slice(1, BASEPREFIX.length) +
                            '/stats' + name.slice(BASEPREFIX.length))
@@ -167,7 +154,7 @@ function createStatsName(statCode, name, startTime, host, bandwidthEst, stats) {
 
   // append duration of bufferings
   for (i = 0; i < rebufferingArray.length; ++i) {
-    statsName.append('bufferingDuration=' + PLAYER.stats_.stateHistory[rebufferingArray[i]].duration);
+    statsName.append('bufferingDuration=' + stats_.stateHistory[rebufferingArray[i]].duration);
   }
 
   return statsName;

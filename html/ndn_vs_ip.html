@@ -6,8 +6,11 @@
   </head>
 
   <body>
-    <!-- Shaka Player compiled library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/2.4.7/shaka-player.compiled.debug.js"></script>
+    <!-- Shaka Player ui compiled library: -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/2.5.5/shaka-player.ui.debug.js"></script>
+
+    <!-- Shaka Player ui compiled library default CSS: -->
+    <link rel="stylesheet" type="text/css" href="../css/controls.css">
 
     <!-- ndn-js compiled library -->
     <script src="https://cdn.jsdelivr.net/gh/named-data/ndn-js@v0.19.0/build/ndn.min.js"></script>
@@ -16,16 +19,13 @@
     <script src="../app.js"></script>
 
     <!-- NDN plugin scheme -->
-    <script id="NdnPlugin" src="../ndn-plugin/http_ndn_plugin.js"></script>
+    <script id="NdnPlugin" src="../plugin/http_ndn_plugin.js"></script>
 
-    <!-- begin url section -->
-      <!-- manifest uri -->
-      <span id="manifestUri" hidden>/ndn/web/video/ndn_vs_ip/hls/playlist.m3u8</span>
-    <!-- end url section -->
+    <!-- manifest uri -->
+    <span id="manifestUri" hidden>/ndn/web/video/ndn_vs_ip/hls/playlist.m3u8</span>
 
-    <video id="video"
-           width="640"
-           poster="../resource/ivisa-poster.jpg"
-           controls autoplay></video>
+    <div data-shaka-player-container style="max-width:40em">
+      <video autoplay data-shaka-player id="video" style="width:100%;height:100%"></video>
+    </div>
   </body>
 </html>

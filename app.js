@@ -10,32 +10,28 @@
  *       manifest file of the video.
  */
 
-// This should match the prefix of all files
+// This should match the prefix of all files (e.g., your NFD cert identity)
 var BASEPREFIX = "/ndn/web";
 
 var MANIFEST_RESOURCE = null;  // resouce part in manifest uri
 var HUB = "localhost"; // default hub
 
-var PUBLIC_IP_ADDRESS = null; // public ip address of client
-
+var PUBLIC_IP_ADDRESS = null; // public ip address of the client
 /**
- * @summary The available ports are 443 and 9696.
+ * @summary For local NFD use a port that NFD supports (e.g., 9696).
  * @note The port can be passed to this plugin by using "data-port" attribute in
  *       span tag with manifestUri id in html file.
  */
-var PORT = null;
+var PORT;
 
 function resolveHubs () {
-  MANIFEST_RESOURCE = document.getElementById("manifestUri").textContent;
-
   var xhr = new XMLHttpRequest();
   xhr.open('GET', "https://ndn-fch.named-data.net/?cap=wss&k=1", false); // get 3 hubs
   xhr.send();
 
-  // save hubs into a list
+  // save hub into a list
   HUB = xhr.responseText;
 
-  console.log("Resolved Closest Hub: ", HUB);
 }
 
 function resolvePublicIp () {
@@ -45,56 +41,43 @@ function resolvePublicIp () {
   xhr.send();
 
   PUBLIC_IP_ADDRESS = xhr.responseText;
-  console.log(PUBLIC_IP_ADDRESS);
+  console.debug(PUBLIC_IP_ADDRESS);
 }
 
-function resolvePort () {
-  if (PORT === null) {
-    if (document.getElementById("manifestUri").hasAttribute("data-port")) {
-    PORT = document.getElementById("manifestUri").getAttribute("data-port");
-      if (PORT !== "443" && PORT !== "9696") {
-        console.log('Warning: port ' + port + ' cannot be used' );
-        PORT = 443;
-      }
-    }
+function resolvePortAndUri () {
+  MANIFEST_RESOURCE = document.getElementById("manifestUri").textContent;
+  PORT = (HUB === 'localhost') ? 9696 : 443;
+  if (document.getElementById("manifestUri").hasAttribute("data-port")) {
+  var p = document.getElementById("manifestUri").getAttribute("data-port");
+    if (isNaN(p))
+      console.warn(p + ' is not a vlid port number, use ' + PORT);
+    else if (p !== '9696' && HUB === 'localhost')
+        console.warn(p + ' is not supported by local NFD, use ' + PORT);
     else
-      PORT = 443; // default
+      PORT = Number(p);
   }
 }
 
-function initApp() {
-  // Install built-in polyfills to patch browser incompatibilities.
-  shaka.polyfill.installAll();
-
-  // Check to see if the browser supports the basic APIs Shaka needs.
-  if (shaka.Player.isBrowserSupported()) {
-    // Everything looks good!
-    initPlayer();
-  } else {
-    // This browser does not have the minimum set of APIs we need.
-    console.log('Browser not supported, switch to native HLS...');
-    nativeHls();
-  }
-}
-
-function initPlayer() {
+function init() {
   //===================================================//
-  // For LOCAL test, COMMENT the following three lines //
+  // For LOCAL test, COMMENT the following two lines //
   //===================================================//
-  resolveHubs();
-  resolvePublicIp();
-  resolvePort();
+  //resolveHubs();
+  //resolvePublicIp();
 
+  resolvePortAndUri();
+  console.debug('Connected >>>>> ' + HUB + ':' + PORT);
 
-  // Create a Player instance.
+  // When using the UI, the player is made automatically by the UI object.
   var video = document.getElementById('video');
-  var player = new shaka.Player(video);
-
-  // Attach player to the window to make it easy to access in the JS console.
-  window.player = player;
+  const ui = video['ui'];
+  const controls = ui.getControls();
+  const player = controls.getPlayer();
+  window.player = ui.player_;
 
   // Listen for error events.
-  player.addEventListener('error', onErrorEvent);
+  player.addEventListener('error', onPlayerErrorEvent);
+  controls.addEventListener('error', onUIErrorEvent);
 
   // configure player
   player.configure({
@@ -108,23 +91,37 @@ function initPlayer() {
     },
   });
 
-  // Try to load a manifest (this is an asynchronous process)
-  player.load('https://' + HUB + MANIFEST_RESOURCE).then(function() {
+  // Try to load a manifest.
+  // This is an asynchronous process.
+  try {
+    player.load('https://' + HUB + MANIFEST_RESOURCE);
     // This runs if the asynchronous load is successful.
     console.log('The video has now been loaded!');
-  }).catch(onError);  // onError is executed if the asynchronous load fails.
+  } catch (error) {
+    onPlayerError(error);
+  }
 }
 
-
-function onErrorEvent(event) {
+function onPlayerErrorEvent(errorEvent) {
   // Extract the shaka.util.Error object from the event.
-  onError(event.detail);
+  onPlayerError(event.detail);
 }
 
-function onError(error) {
-  // Log the error.
+function onPlayerError(error) {
+  // Handle player error
   console.error('Error code', error.code, 'object', error);
 }
 
+function onUIErrorEvent(errorEvent) {
+  // Extract the shaka.util.Error object from the event.
+  onPlayerError(event.detail);
+}
 
-document.addEventListener('DOMContentLoaded', initApp);
+function initFailed() {
+  // Handle the failure to load
+  console.error('Unable to load the UI library!');
+}
+
+// Wait until the UI is loaded.
+document.addEventListener('shaka-ui-loaded', init);
+document.addEventListener('shaka-ui-load-failed', initFailed);
