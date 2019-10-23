@@ -62,11 +62,11 @@ function init() {
   //===================================================//
   // For LOCAL test, COMMENT the following two lines //
   //===================================================//
-  //resolveHubs();
-  //resolvePublicIp();
+  resolveHubs();
+  resolvePublicIp();
 
   resolvePortAndUri();
-  console.debug('Connected >>>>> ' + HUB + ':' + PORT);
+  console.debug('Connecting to >>>>> ' + HUB + ':' + PORT);
 
   // When using the UI, the player is made automatically by the UI object.
   var video = document.getElementById('video');
