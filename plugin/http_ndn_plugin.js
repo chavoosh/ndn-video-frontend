@@ -94,7 +94,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
           face.expressInterest(statsInterest, null, null, null, null, null);
         }
       },
-      {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 500},
+      {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 50},
       statsObj);
   });
 
