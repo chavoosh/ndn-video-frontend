@@ -70,28 +70,32 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
         }
         else {
           shaka.log.debug('Uknown request type ' + requestType);
-        };
-        // send an Interest back for collecting stats
+        }
+
+       // send an Interest back for collecting stats
         var statsName = createStatsName(statsCode.DONE, name, startTime, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
-          statsInterest.setMustBeFresh(true);
-          face.expressInterest(statsInterest, null, null, null, null, null);
+          // dummy Data will return to clear up the pit entries
+          SegmentFetcher.fetch(face, statsInterest, null,
+            function(content){}, function(errCode, message){},
+            {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 0}, null);
         }
 
         resolve(response);
       },
       function(errorCode, message) { // onError
         shaka.log.debug('Error ' + errorCode + ': ' + message);
-
         // send an Interest back for collecting stats
         var statsName = createStatsName(statsCode.ERROR, name, startTime, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
-          statsInterest.setMustBeFresh(true);
-          face.expressInterest(statsInterest, null, null, null, null, null);
+          // dummy Data will return to clear up the pit entries
+          SegmentFetcher.fetch(face, statsInterest, null,
+            function(content){}, function(errCode, message){},
+            {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 0}, null);
         }
       },
       {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 50},
@@ -130,11 +134,17 @@ function createStatsName(statCode, name, startTime, host, stats) {
   var bandwidthEst = Math.round(stats_.estimatedBandwidth);
   var startupDelay =stats_.loadLatency;
 
+  shaka.log.debug('[  STATS HISTORY  ]');
+  shaka.log.debug('Startup: ' + startupDelay);
   var rebufferingArray = [];
-  for (var i = 1 /*exclude startup buffering*/; i < stats_.stateHistory.length; ++i)
-    if (stats_.stateHistory[i].state === "buffering")
+  for (var i = 1 /*exclude startup buffering*/; i < stats_.stateHistory.length; ++i) {
+    if (stats_.stateHistory[i].state === "buffering") {
       rebufferingArray.push(i);
-
+      console.log('buffering: ' + stats_.stateHistory[i].duration);
+    }
+  }
+  shaka.log.debug('Number of bufferings: ' + rebufferingArray.length);
+  
   var statsName = new Name(name.slice(1, BASEPREFIX.length) +
                            '/stats' + name.slice(BASEPREFIX.length))
                       .append('status=' + stat)
