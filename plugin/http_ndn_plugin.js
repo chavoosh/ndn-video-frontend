@@ -70,28 +70,31 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
         }
         else {
           shaka.log.debug('Uknown request type ' + requestType);
-        };
+        }
         // send an Interest back for collecting stats
         var statsName = createStatsName(statsCode.DONE, name, startTime, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
-          statsInterest.setMustBeFresh(true);
-          face.expressInterest(statsInterest, null, null, null, null, null);
+          // dummy Data will return to clear up the pit entries
+          SegmentFetcher.fetch(face, statsInterest, null,
+            function(content){}, function(errCode, message){},
+            {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 0}, null);
         }
 
         resolve(response);
       },
       function(errorCode, message) { // onError
         shaka.log.debug('Error ' + errorCode + ': ' + message);
-
         // send an Interest back for collecting stats
         var statsName = createStatsName(statsCode.ERROR, name, startTime, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
-          statsInterest.setMustBeFresh(true);
-          face.expressInterest(statsInterest, null, null, null, null, null);
+          // dummy Data will return to clear up the pit entries
+          SegmentFetcher.fetch(face, statsInterest, null,
+            function(content){}, function(errCode, message){},
+            {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 0}, null);
         }
       },
       {pipeline: "cubic", maxRetriesOnTimeoutOrNack: 50},
