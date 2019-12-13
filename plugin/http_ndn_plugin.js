@@ -37,7 +37,6 @@ statsCode = {
  */
 shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
   // Last time stamp when we got a progress event.
-  startOfNdnPlugin = Date.now();
   var promise = new Promise(function(resolve, reject) {
     var parser = document.createElement('a');
     parser.href = uri;
@@ -59,6 +58,9 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
     var interest = new Interest(new Name(name));
     interest.setInterestLifetimeMilliseconds(1000);
 
+    if (uri.find('playlist') > -1)
+      startOfNdnPlugin = Date.now();
+ 
     var statsObj = {};
     SegmentFetcher.fetch(face, interest, null,
       function(content) { // onCompvare
