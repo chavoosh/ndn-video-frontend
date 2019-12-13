@@ -58,7 +58,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
     var interest = new Interest(new Name(name));
     interest.setInterestLifetimeMilliseconds(1000);
 
-    if (uri.find('playlist') > -1)
+    if (uri.indexOf('playlist') > -1)
       startOfNdnPlugin = Date.now();
  
     var statsObj = {};
