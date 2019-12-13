@@ -135,8 +135,6 @@ function createStatsName(statCode, name, startTime, host, stats) {
   }
 
   var stats_ = window.player.getStats();
-  if (isNaN(stats_.loadLatency))
-    return ""; // samples are not ready yet
 
   var bandwidthEst = Math.round(stats_.estimatedBandwidth);
   var startupDelay =stats_.loadLatency;
