@@ -2,7 +2,7 @@
 
 This repository is part of [iViSA project](https://ivisa.named-data.net).
 Assuming there is an accessible NDN server (either online or local) that can serve files of
-an HLS/Dash packaged videos, this frontend web resources allow you to run watch those videos
+an HLS/Dash packaged videos, this frontend web resources allow you to watch those videos
 over NDN protocol in a browser.
 
 For a quick test, simply open [index.html](index.html) file and open the video link to watch a
