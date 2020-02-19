@@ -11,7 +11,8 @@
  */
 
 // This should match the prefix of all files (e.g., your NFD cert identity)
-var BASEPREFIX = "/ndn/web";
+var BASEPREFIX = "/ndn/web/video";
+var BASEPREFIX_STATS = "/ndn/video/stats";
 
 var MANIFEST_RESOURCE = null;  // resouce part in manifest uri
 var HUB = "localhost"; // default hub
@@ -24,24 +25,16 @@ var PUBLIC_IP_ADDRESS = null; // public ip address of the client
  */
 var PORT;
 
-function resolveHubs () {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', "https://ndn-fch.named-data.net/?cap=wss&k=1", false); // get 3 hubs
-  xhr.send();
-
-  // save hub into a list
-  HUB = xhr.responseText;
-
+async function resolveHubs () {
+  var response = await fetch("https://ndn-fch.named-data.net/?cap=wss&k=1");
+  HUB = await response.text();
 }
 
-function resolvePublicIp () {
-  var xhr = new XMLHttpRequest();
-  // sync request because we need to know client IP address
-  xhr.open('GET', "https://api.ipify.org/", false);
-  xhr.send();
+async function resolvePublicIp () {
+  var response = await fetch("https://api.ipify.org/");
+  PUBLIC_IP_ADDRESS = await response.text();
 
-  PUBLIC_IP_ADDRESS = xhr.responseText;
-  console.debug(PUBLIC_IP_ADDRESS);
+  console.debug("PUBLIC_IP_ADDRESS: " + PUBLIC_IP_ADDRESS);
 }
 
 function resolvePortAndUri () {
@@ -58,12 +51,12 @@ function resolvePortAndUri () {
   }
 }
 
-function init() {
+async function init() {
   //===================================================//
   // For LOCAL test, COMMENT the following two lines //
   //===================================================//
-  resolveHubs();
-  resolvePublicIp();
+  await resolveHubs();
+  await resolvePublicIp();
 
   resolvePortAndUri();
   console.debug('Connecting to >>>>> ' + HUB + ':' + PORT);

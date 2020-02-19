@@ -138,8 +138,7 @@ function createStatsName(statCode, name, startTime, host, stats) {
     if (stats_.stateHistory[i].state === "buffering")
       rebufferingArray.push(i);
 
-  var statsName = new Name(name.slice(1, BASEPREFIX.length) +
-                           '/stats' + name.slice(BASEPREFIX.length))
+  var statsName = new Name(BASEPREFIX_STATS + '/stats' + name.slice(BASEPREFIX.length))
                       .append('status=' + stat)
                       .append('hub=' + host.toString())
                       .append('ip=' + PUBLIC_IP_ADDRESS)
