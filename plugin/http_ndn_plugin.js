@@ -80,7 +80,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
         }
 
        // send an Interest back for collecting stats
-        var statsName = createStatsName(statsCode.DONE, name, startTime, host, statsObj);
+        var statsName = createStatsName(statsCode.DONE, name, startOfNdnPlugin, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
@@ -95,7 +95,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
       function(errorCode, message) { // onError
         shaka.log.debug('Error ' + errorCode + ': ' + message);
         // send an Interest back for collecting stats
-        var statsName = createStatsName(statsCode.ERROR, name, startTime, host, statsObj);
+        var statsName = createStatsName(statsCode.ERROR, name, startOfNdnPlugin, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
