@@ -10,11 +10,11 @@
  * @note leave BASEPREFIX null, if you want it to be determined automatically.
  */
 
-var BASEPREFIX = "/ndn/web";
+var BASEPREFIX = "/ndn/web/video"; // prefix of all video files
+var BASEPREFIX_STATS = "/ndn/video/stats"; // prefix under which stats Interests will be sent
 var MANIFEST_RESOURCE = null;  // resouce part in manifest uri
 var HUB = "hobo.cs.arizona.edu"; // chosen hub
-var HUBS; // list of resolved hubs from FCH + localhost
-
+var HUBS = []; // list of resolved hubs from FCH + localhost
 var PUBLIC_IP_ADDRESS = null; // public ip address of client
 
 var N_ATTEMPTS = 4;
@@ -29,6 +29,8 @@ function resolveHubs () {
 
   // save hubs into a list
   HUBS = xhr.responseText.split(",");
+  //HUBS.push("hobo.cs.arizona.edu");
+  //HUBS.push("suns.cs.ucla.edu");
   //HUBS.push("localhost");
   console.log("Candidate hubs: ", HUBS);
 }

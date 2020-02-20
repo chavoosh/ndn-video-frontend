@@ -58,16 +58,16 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
     var interest = new Interest(new Name(name));
     interest.setInterestLifetimeMilliseconds(1000);
 
-    if (uri.indexOf('playlist') > -1)
+    if (uri.indexOf('playlist') > -1) {
       startOfNdnPlugin = Date.now();
- 
+    }
+
     var statsObj = {};
     SegmentFetcher.fetch(face, interest, null,
-      function(content) { // onCompvare
+      function(content) { // onComplete
         if (name.indexOf('playlist') > -1) {
           console.log('TTFB (ms): ', Date.now() - startOfNdnPlugin);
-        }
-
+	}
         var headers = {};
         var response = null;
         if (requestType < 4) { // manifest file
@@ -80,7 +80,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
         }
 
        // send an Interest back for collecting stats
-        var statsName = createStatsName(statsCode.DONE, name, startOfNdnPlugin, host, statsObj);
+        var statsName = createStatsName(statsCode.DONE, name, startTime, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
@@ -95,7 +95,7 @@ shaka.net.HttpNdnPlugin = function(uri, request, requestType, progressUpdated) {
       function(errorCode, message) { // onError
         shaka.log.debug('Error ' + errorCode + ': ' + message);
         // send an Interest back for collecting stats
-        var statsName = createStatsName(statsCode.ERROR, name, startOfNdnPlugin, host, statsObj);
+        var statsName = createStatsName(statsCode.ERROR, name, startTime, host, statsObj);
         if (statsName !== "") {
           // create stats Interest
           var statsInterest = new Interest(statsName);
@@ -135,12 +135,15 @@ function createStatsName(statCode, name, startTime, host, stats) {
   }
 
   var stats_ = window.player.getStats();
+  if (isNaN(stats_.loadLatency))
+    return ""; // samples are not ready yet
 
   var bandwidthEst = Math.round(stats_.estimatedBandwidth);
   var startupDelay =stats_.loadLatency;
 
   shaka.log.debug('[  STATS HISTORY  ]');
   shaka.log.debug('Startup: ' + startupDelay);
+
   var rebufferingArray = [];
   for (var i = 1 /*exclude startup buffering*/; i < stats_.stateHistory.length; ++i) {
     if (stats_.stateHistory[i].state === "buffering") {
@@ -149,9 +152,8 @@ function createStatsName(statCode, name, startTime, host, stats) {
     }
   }
   shaka.log.debug('Number of bufferings: ' + rebufferingArray.length);
-  
-  var statsName = new Name(name.slice(1, BASEPREFIX.length) +
-                           '/stats' + name.slice(BASEPREFIX.length))
+
+  var statsName = new Name(BASEPREFIX_STATS + name.slice(BASEPREFIX.length))
                       .append('status=' + stat)
                       .append('hub=' + host.toString())
                       .append('ip=' + PUBLIC_IP_ADDRESS)
