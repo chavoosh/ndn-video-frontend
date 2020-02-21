@@ -49,8 +49,8 @@ function initPlayer() {
   // configure player
   player.configure({
     streaming: {
-      bufferingGoal: 100,
-      bufferBehind: 100
+      bufferingGoal: 20,
+      bufferBehind: 20
     }
   });
 

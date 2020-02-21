@@ -28,9 +28,10 @@ function resolveHubs () {
   xhr.send();
 
   // save hubs into a list
-  HUBS = xhr.responseText.split(",");
+  //HUBS = xhr.responseText.split(",");
   //HUBS.push("hobo.cs.arizona.edu");
   //HUBS.push("suns.cs.ucla.edu");
+  HUBS.push("wundngw.arl.wustl.edu");
   //HUBS.push("localhost");
   console.log("Candidate hubs: ", HUBS);
 }
@@ -148,8 +149,8 @@ function initPlayer() {
         bufferingGoal: 20,
         bufferBehind: 20,
         retryParameters: {
-          maxAttempts: 1,
-          timeout: 0
+          maxAttempts: 3,
+          timeout: 4000
         }
       },
     });

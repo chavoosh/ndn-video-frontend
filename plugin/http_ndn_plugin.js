@@ -145,8 +145,13 @@ function createStatsName(statCode, name, startTime, host, stats) {
   shaka.log.debug('Startup: ' + startupDelay);
 
   var rebufferingArray = [];
-  for (var i = 1 /*exclude startup buffering*/; i < stats_.stateHistory.length; ++i) {
+  var firstBuffering = true;
+  for (var i = 0; i < stats_.stateHistory.length; ++i) {
     if (stats_.stateHistory[i].state === "buffering") {
+      if (firstBuffering == true) { //exclude startup buffering
+        firstBuffering = false;
+	continue;
+      }
       rebufferingArray.push(i);
       console.log('buffering: ' + stats_.stateHistory[i].duration);
     }
