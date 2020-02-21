@@ -17,6 +17,7 @@ var host = null;
 var startOfNdnPlugin;
 
 var sessionNo = Math.floor(Math.random() * Math.pow(10, 12));
+console.log('sessions_id: ' + sessionNo);
 var startupDelay = 0; // startup delay of the video
 
 statsCode = {
