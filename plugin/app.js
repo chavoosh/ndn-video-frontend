@@ -150,7 +150,7 @@ function initPlayer() {
         bufferBehind: 20,
         retryParameters: {
           maxAttempts: 3,
-          timeout: 4000
+          timeout: 10000
         }
       },
     });

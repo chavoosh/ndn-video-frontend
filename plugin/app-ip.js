@@ -50,8 +50,12 @@ function initPlayer() {
   player.configure({
     streaming: {
       bufferingGoal: 20,
-      bufferBehind: 20
-    }
+      bufferBehind: 20,
+      retryParameters: {
+        maxAttempts: 3,
+        timeout: 10000
+      }
+    },
   });
 
   // Try to load a manifest.
