@@ -43,7 +43,7 @@ function resolvePublicIp () {
   xhr.send();
 
   PUBLIC_IP_ADDRESS = xhr.responseText;
-  console.log(PUBLIC_IP_ADDRESS);
+  console.log('PUBLIC_IP_ADDRESS: ' + PUBLIC_IP_ADDRESS);
 }
 
 function resolveUri () {

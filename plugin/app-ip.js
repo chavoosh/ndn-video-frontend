@@ -11,6 +11,16 @@
  */
 var HOST = ''; 
 
+function resolvePublicIp () {
+  var xhr = new XMLHttpRequest();
+  // sync request because we need to know client IP address
+  xhr.open('GET', "https://api.ipify.org/", false);
+  xhr.send();
+
+  PUBLIC_IP_ADDRESS = xhr.responseText;
+  console.log('PUBLIC_IP_ADDRESS: ' + PUBLIC_IP_ADDRESS);
+}
+
 function initApp() {
   // resolve host name
   var parser = document.createElement('a');
@@ -33,6 +43,7 @@ function initApp() {
   }
 }
 function initPlayer() {
+  resolvePublicIp();
   console.debug('CONNECTING TO =======> ip@' + HOST);
 
   // Create a Player instance.
