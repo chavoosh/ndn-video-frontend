@@ -75,7 +75,7 @@ async function init() {
   // configure player
   player.configure({
     streaming: {
-      useNativeHlsOnSafari: false,
+	    useNativeHlsOnSafari: false,
       bufferingGoal: 20,
       bufferBehind: 20,
       retryParameters: {
