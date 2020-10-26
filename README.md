@@ -1,4 +1,7 @@
-# Let NDN stream videos in browsers
+# Let NDN Stream Videos in Browsers
+
+[![DOI](https://zenodo.org/badge/213498810.svg)](https://zenodo.org/badge/latestdoi/213498810)
+
 
 This repository is part of [iViSA project](https://ivisa.named-data.net).
 This is a simple webpage that allows the users to stream HLS/DASH packaged videos
@@ -24,3 +27,15 @@ To report any bugs or features use the project's [issue tracker](https://github.
 # License
 ndn-video-frotend is an open source project licensed under the GPL version 3. See [COPYING.md](COPYING.md)
 for more information.
+
+# Citation
+You can cite this project in your publications if it helps your research. Here is an example BibTeX entry:
+
+```
+@misc{chavoosh'18stream,
+  title={Let NDN Stream Videos in Browser},
+  author={Ghasemi, Chavoosh},
+  year={2020},
+  howpublished={\url{https://github.com/chavoosh/ndn-video-frontend}}
+}
+```
